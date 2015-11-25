@@ -1,0 +1,13 @@
+<node name="blur">
+	<inputs>
+		<connector name="src" type="numpy.ndarray" />
+		<connector name="ksize" type="tuple" />
+	</inputs>
+	<outputs>
+		<connector name="dst" type="numpy.ndarray" />
+	</outputs>
+	<imports>
+		<import name="cv2" />
+	</imports>
+	<code>dst = cv2.blur( src, ksize )</code>
+</node>

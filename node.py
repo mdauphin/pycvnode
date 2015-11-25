@@ -67,7 +67,6 @@ class Connector(object):
     def evaluate(self):
         return None
 
-
 class ConnectorInput(Connector):
 
     def __init__(self,name):
@@ -81,7 +80,6 @@ class ConnectorInput(Connector):
             if isinstance(self.value, str):
                 return "'%s'" % self.value
             return str(self.value)
-
 
 class ConnectorOutput(Connector):
     _cpt = 0
@@ -102,39 +100,6 @@ class Connection(object):
     def __init__(self,ouput_connector,input_connector):
         self.output_connector = ouput_connector
         self.input_connector = input_connector
-
-class NodeImRead(Node):
-    def __init__(self):
-        self.filename = ConnectorInput("filename")
-        self.flags = ConnectorInput("flags")
-        self.im = ConnectorOutput("im")
-        super( NodeImRead, self ).__init__( "imread", connectors = [ self.filename, self.flags, self.im ] )
-
-    def generate(self):
-        return self.function_call( self.im.varname, [self.filename, self.flags] )
-
-class NodeImWrite(Node):
-    def __init__(self):
-        self.filename = ConnectorInput("filename")
-        self.img = ConnectorInput("img")
-        self.params = ConnectorInput("params")
-        self.retval = ConnectorOutput("retval")
-        super( NodeImWrite, self ).__init__( "imwrite", connectors = [ self.filename, self.img, self.params, self.retval ] )
-
-
-    def generate(self):
-        return self.function_call( self.retval.varname, [self.filename, self.img, self.params] )
-
-class NodeBlur(Node):
-
-    def __init__(self):
-        self.src = ConnectorInput("src")
-        self.ksize = ConnectorInput("ksize")
-        self.dst = ConnectorOutput("dst")
-        super( NodeBlur, self ).__init__( "blur", connectors = [ self.src, self.ksize, self.dst ] )
-
-    def generate(self):
-        return self.function_call( self.dst.varname, [self.src, self.ksize] )
 
 class NodeXml(Node):
     def __init__(self, filename ):
@@ -167,13 +132,12 @@ def test():
     n1.filename.value = "file.png"
     n1.flags.value = 1
 
-    n2 = NodeBlur()
+    n2 = NodeXml(filename = 'nodes/blur.xml')
     n2.src = n1.im
     n2.ksize.value = (3,3)
 
-    n3 = NodeImWrite()
+    n3 = NodeXml(filename = 'nodes/imwrite.xml')
     n3.filename.value = "output.png"
-
 
     t.nodes.append(n1)
     t.nodes.append(n2)
@@ -181,8 +145,7 @@ def test():
 
     t.connect( n1.getConnectorByName('im'), n2.getConnectorByName('src') )
     t.connect( n2.getConnectorByName('dst'), n3.getConnectorByName('img') )
-
-
+    
     t.generate()
 
 if __name__ == '__main__':

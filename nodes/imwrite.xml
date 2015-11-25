@@ -1,0 +1,14 @@
+<node name="imwrite">
+	<inputs>
+		<connector name="filename" type="str" />
+		<connector name="img" type="numpy.ndarray" />
+		<!--<connector name="params" optional="true"/>-->
+	</inputs>
+	<outputs>
+		<connector name="retval" type="int" />
+	</outputs>
+	<imports>
+		<import name="cv2" />
+	</imports>
+	<code>retval = cv2.imwrite( filename, img )</code>
+</node>
