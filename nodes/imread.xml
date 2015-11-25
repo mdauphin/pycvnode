@@ -1,0 +1,13 @@
+<node name="imread">
+	<inputs>
+		<connector name="filename" type="str" />
+		<connector name="flags" type="int" default="cv2.CV_LOAD_IMAGE_COLOR" />
+	</inputs>
+	<outputs>
+		<connector name="im" type="numpy.ndarray" />
+	</outputs>
+	<imports>
+		<import name="cv2" />
+	</imports>
+	<code>im = cv2.imread( filename, flags )</code>
+</node>
