@@ -5,6 +5,7 @@ class Node(object):
     def __init__(self, function_name, connectors = []):
         self.connectors = connectors
         self.function_name = function_name
+        self.id = 0 #Id load from file
 
     def getConnectorByName( self, name ):
         matches = [ x for x in self.connectors if x.name == name ]
@@ -53,6 +54,12 @@ class Tree(object):
         for node in self.nodes:
             print node.generate()
 
+    def findNode( self, id ):
+        results = [ x for x in self.nodes if x.id == id ]
+        if len(results)>0:
+            return results[0]
+        return None
+
 class Connector(object):
 
     class Direction:
@@ -63,6 +70,10 @@ class Connector(object):
         self.name = name
         self.direction = direction
         self.value = None
+        self.parser = None
+
+    def setValue(self,value):
+        self.value = self.parser.parse(value)
 
     def evaluate(self):
         return None
@@ -101,6 +112,26 @@ class Connection(object):
         self.output_connector = ouput_connector
         self.input_connector = input_connector
 
+class ConnectorParser(object):
+    def __init__(self,type):
+        self.type = type
+        self.converter = {
+            'str' : self.toStr,
+            'int' : self.toInt,
+            'float' : self.toFloat,
+            'tuple' : self.toTuple,
+             }
+    def parse(self,value):
+        return self.converter[self.type](value)
+    def toStr(self,value):
+        return value
+    def toInt(self,value):
+        return int(value)
+    def toFloat(self,value):
+        return foat(value)
+    def toTuple(self,value):
+        return eval(value)
+
 class NodeXml(Node):
     def __init__(self, filename ):
         tree = etree.parse(filename)
@@ -113,7 +144,9 @@ class NodeXml(Node):
         results = []
         for connector in tree.xpath(xpath):
             connector_name = connector.get('name')
+            connector_type = connector.get('type')
             connector_inst = creator(connector_name)
+            connector_inst.parser = ConnectorParser(connector_type)
             results.append( connector_inst )
             setattr( self, connector_name, connector_inst )
         return results
@@ -125,28 +158,29 @@ class NodeXml(Node):
             self.code = re.sub( r"\b%s\b" %  o_con.name, o_con.evaluate(), self.code )
         return self.code
 
-def test():
+
+def test(filename):
     t = Tree()
 
-    n1 = NodeXml(filename = 'nodes/imread.xml')
-    n1.filename.value = "file.png"
-    n1.flags.value = 1
+    tree = etree.parse(filename)
 
-    n2 = NodeXml(filename = 'nodes/blur.xml')
-    n2.src = n1.im
-    n2.ksize.value = (3,3)
+    for xml_node in tree.xpath('/tree/node'):
+        node = NodeXml(xml_node.get('name') + '.xml' )
+        setattr( node, 'id', xml_node.get('id'))
+        t.nodes.append(node)
+        for xml_param in xml_node.findall('param'):
+            connector = node.getConnectorByName(xml_param.get('name'))
+            connector.setValue( xml_param.get('value') )
 
-    n3 = NodeXml(filename = 'nodes/imwrite.xml')
-    n3.filename.value = "output.png"
+    for xml_connection in tree.xpath('/tree/connections/connection'):
+        xml_src = xml_connection.find('src')
+        src = t.findNode( xml_src.get('id') )
+        xml_dst = xml_connection.find('dst')
+        dst = t.findNode( xml_dst.get('id') )
+        t.connect( src.getConnectorByName(xml_src.get('name')),
+        dst.getConnectorByName(xml_dst.get('name')) )
 
-    t.nodes.append(n1)
-    t.nodes.append(n2)
-    t.nodes.append(n3)
-
-    t.connect( n1.getConnectorByName('im'), n2.getConnectorByName('src') )
-    t.connect( n2.getConnectorByName('dst'), n3.getConnectorByName('img') )
-    
     t.generate()
 
 if __name__ == '__main__':
-    test()
+    test('tree.xml')

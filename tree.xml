@@ -1,0 +1,22 @@
+<tree>
+  <node id="1" name="nodes/imread" >
+    <param name="filename" value="file.png" />
+    <param name="flags" value="1" />
+  </node>
+  <node id="2" name="nodes/blur">
+    <param name="ksize" value="(5,5)" />
+  </node>
+  <node id="3" name="nodes/imwrite" >
+    <param name="filename" value="out.png" />   
+  </node>
+  <connections>
+    <connection>
+      <src id="1" name="im" />
+      <dst id="2" name="src" />
+    </connection>
+    <connection>
+      <src id="2" name="dst" />
+      <dst id="3" name="img" />
+    </connection>
+  </connections>
+</tree>
