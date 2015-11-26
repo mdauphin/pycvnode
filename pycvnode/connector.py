@@ -6,7 +6,8 @@ class Connector(object):
         OUTPUT = 1
         INPUT  = 2
 
-    def __init__(self,name,direction,type):
+    def __init__(self,node,name,direction,type):
+        self.node = node
         self.name = name
         self.direction = direction
         self.value = None
@@ -20,11 +21,14 @@ class Connector(object):
     def generate(self):
         return None
 
+    def evaluate(self):
+        raise Exception('Connector','Can not evaluate generic Connector')
+
 class ConnectorInput(Connector):
 
-    def __init__(self,name,type):
+    def __init__(self,node,name,type):
         self.connection = None
-        super( ConnectorInput, self ).__init__( name,
+        super( ConnectorInput, self ).__init__( node, name,
          Connector.Direction.INPUT, type );
 
     def generate(self):
@@ -35,13 +39,21 @@ class ConnectorInput(Connector):
                 return "'%s'" % self.value
             return str(self.value)
 
+    def evaluate(self):
+        if self.connection != None:
+            return self.connection.output_connector.eval()
+        elif self.value != None:
+            return self.value
+        else:
+            raise Exception('ConnectorInput','No connection no value to evaluate')
+
 class ConnectorOutput(Connector):
     _cpt = 0
 
-    def __init__(self,name,type):
+    def __init__(self,node,name,type):
         self.varname = self.generate_uniq_var()
         self.connections = []
-        super( ConnectorOutput, self ).__init__( name,
+        super( ConnectorOutput, self ).__init__( node, name,
          Connector.Direction.OUTPUT, type )
 
     def generate_uniq_var(self):
@@ -50,6 +62,10 @@ class ConnectorOutput(Connector):
 
     def generate(self):
         return self.varname
+
+    def evaluate(self):
+        return self.node.evaluate()
+
 
 class ConnectorParser(object):
     def __init__(self,connector):

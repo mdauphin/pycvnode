@@ -7,6 +7,7 @@ class Node(object):
         self.connectors = connectors
         self.name = name
         self.id = 0 #Id load from file
+        self.code = None
 
     def __str__(self):
         return "%s[%d]" % ( self.name, self.id )
@@ -38,6 +39,26 @@ class Node(object):
             results.append( tmp )
         return results
 
+    '''remplace in code source variable name by corresponding connector values'''
+    def generate(self):
+        for i_con in self.getInputConnectors():
+            self.code = re.sub( r"\b%s\b" %  i_con.name, i_con.generate(), self.code )
+        for o_con in self.getOutputConnectors():
+            self.code = re.sub( r"\b%s\b" %  o_con.name, o_con.generate(), self.code )
+        return self.code
+
+    '''evaluate python code'''
+    def evaluate(self):
+        src = self.code
+        ns = {}
+        #TODO no do in hard codded
+        ast = compile( 'import cv2', '<string>', 'exec' )
+        exec ast in ns
+        ast = compile( src, '<string>', 'exec' )
+        for i_con in self.getInputConnectors():
+            ns[ i_con.name ] = i_con.value
+        exec ast in ns
+        return ns[self.getOutputConnectors()[0].name]
 
 class NodeXml(Node):
     def __init__(self, filename ):
@@ -52,14 +73,7 @@ class NodeXml(Node):
         for connector in tree.xpath(xpath):
             connector_name = connector.get('name')
             connector_type = connector.get('type')
-            connector_inst = creator(connector_name,connector_type)
+            connector_inst = creator(self,connector_name,connector_type)
             results.append( connector_inst )
             setattr( self, connector_name, connector_inst )
         return results
-
-    def generate(self):
-        for i_con in self.getInputConnectors():
-            self.code = re.sub( r"\b%s\b" %  i_con.name, i_con.generate(), self.code )
-        for o_con in self.getOutputConnectors():
-            self.code = re.sub( r"\b%s\b" %  o_con.name, o_con.generate(), self.code )
-        return self.code
