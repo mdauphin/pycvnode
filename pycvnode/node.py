@@ -39,7 +39,6 @@ class Node(object):
         function_name = 'cv2.%s' % self.function_name
         return "%s = %s( %s )" % ( ret, function_name, ','.join( self.eval_parameters(params) ) )
 
-
 class NodeXml(Node):
     def __init__(self, filename ):
         tree = etree.parse(filename)
