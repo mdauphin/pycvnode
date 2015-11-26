@@ -29,10 +29,10 @@ class Node(object):
     def generate(self):
         return None
 
-    def eval_parameters(self, params):
+    def generate_parameters(self, params):
         results = []
         for param in params:
-            tmp = param.evaluate()
+            tmp = param.generate()
             if tmp == None:
                 continue
             results.append( tmp )
@@ -52,15 +52,14 @@ class NodeXml(Node):
         for connector in tree.xpath(xpath):
             connector_name = connector.get('name')
             connector_type = connector.get('type')
-            connector_inst = creator(connector_name)
-            connector_inst.parser = ConnectorParser(connector_type)
+            connector_inst = creator(connector_name,connector_type)
             results.append( connector_inst )
             setattr( self, connector_name, connector_inst )
         return results
 
     def generate(self):
         for i_con in self.getInputConnectors():
-            self.code = re.sub( r"\b%s\b" %  i_con.name, i_con.evaluate(), self.code )
+            self.code = re.sub( r"\b%s\b" %  i_con.name, i_con.generate(), self.code )
         for o_con in self.getOutputConnectors():
-            self.code = re.sub( r"\b%s\b" %  o_con.name, o_con.evaluate(), self.code )
+            self.code = re.sub( r"\b%s\b" %  o_con.name, o_con.generate(), self.code )
         return self.code

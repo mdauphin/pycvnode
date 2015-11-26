@@ -1,30 +1,35 @@
+import cv2
+
 class Connector(object):
 
     class Direction:
         OUTPUT = 1
         INPUT  = 2
 
-    def __init__(self,name,direction):
+    def __init__(self,name,direction,type):
         self.name = name
         self.direction = direction
         self.value = None
-        self.parser = None
+        self.type = type
+        self.parser = ConnectorParser(self)
+        self.render = ConnectorRenderer(self)
 
     def setValue(self,value):
         self.value = self.parser.parse(value)
 
-    def evaluate(self):
+    def generate(self):
         return None
 
 class ConnectorInput(Connector):
 
-    def __init__(self,name):
+    def __init__(self,name,type):
         self.connection = None
-        super( ConnectorInput, self ).__init__( name, Connector.Direction.INPUT );
+        super( ConnectorInput, self ).__init__( name,
+         Connector.Direction.INPUT, type );
 
-    def evaluate(self):
+    def generate(self):
         if self.connection != None:
-            return self.connection.output_connector.evaluate()
+            return self.connection.output_connector.generate()
         if self.value != None:
             if isinstance(self.value, str):
                 return "'%s'" % self.value
@@ -33,21 +38,22 @@ class ConnectorInput(Connector):
 class ConnectorOutput(Connector):
     _cpt = 0
 
-    def __init__(self,name):
+    def __init__(self,name,type):
         self.varname = self.generate_uniq_var()
         self.connections = []
-        super( ConnectorOutput, self ).__init__( name, Connector.Direction.OUTPUT )
+        super( ConnectorOutput, self ).__init__( name,
+         Connector.Direction.OUTPUT, type )
 
     def generate_uniq_var(self):
         ConnectorOutput._cpt += 1
         return "var%d" % ( ConnectorOutput._cpt )
 
-    def evaluate(self):
+    def generate(self):
         return self.varname
 
 class ConnectorParser(object):
-    def __init__(self,type):
-        self.type = type
+    def __init__(self,connector):
+        self.connector = connector
         self.converter = {
             'str' : self.toStr,
             'int' : self.toInt,
@@ -55,7 +61,7 @@ class ConnectorParser(object):
             'tuple' : self.toTuple,
              }
     def parse(self,value):
-        return self.converter[self.type](value)
+        return self.converter[self.connector.type](value)
     def toStr(self,value):
         return value
     def toInt(self,value):
@@ -64,3 +70,29 @@ class ConnectorParser(object):
         return foat(value)
     def toTuple(self,value):
         return eval(value)
+
+class ConnectorRenderer(object):
+    def __init__(self,connector):
+        self.connector = connector
+        self.converter = {
+            'str' : self.toStr,
+            'int' : self.toStr,
+            'float' : self.toStr,
+            'tuple' : self.toStr,
+            'numpy.ndarray' : self.toImg,
+             }
+    def render(self, http):
+        return self.converter[self.connector.type](http,self.connector.evaluate())
+
+    def toImg(self, http, value ):
+        http.send_response(200)
+        http.send_header('Content-type','image/png')
+        http.end_headers()
+        http.wfile.write(cv2.imencode( '.png', value  ))
+
+    def toStr(self,value):
+        http.send_response(200)
+        http.send_header('Content-type','text/html')
+        http.end_headers()
+        http.wfile.write('<p>%s</p>' % value)
+        return
