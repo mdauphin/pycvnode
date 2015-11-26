@@ -7,7 +7,7 @@
     <param name="ksize" value="(5,5)" />
   </node>
   <node id="3" name="nodes/imwrite" >
-    <param name="filename" value="out.png" />   
+    <param name="filename" value="out.png" />
   </node>
   <connections>
     <connection>

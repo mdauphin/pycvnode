@@ -1,3 +1,4 @@
 #ignore tmp file
 *.*~
-
+#ignore python compile file
+*.pyc
