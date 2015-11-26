@@ -23,7 +23,11 @@ class Tree(object):
         results = [ x for x in self.nodes if x.id == id ]
         if len(results)>0:
             return results[0]
-        return None
+        raise Exception('Tree','No node with id = %d' % id )
+
+    def dump(self):
+        for node in self.nodes:
+            print node
 
 class TreeXml(Tree):
     def __init__(self,filename):
@@ -33,7 +37,7 @@ class TreeXml(Tree):
 
         for xml_node in tree.xpath('/tree/node'):
             node = NodeXml(xml_node.get('name') + '.xml' )
-            setattr( node, 'id', xml_node.get('id'))
+            setattr( node, 'id', int(xml_node.get('id')))
             self.nodes.append(node)
             for xml_param in xml_node.findall('param'):
                 connector = node.getConnectorByName(xml_param.get('name'))
@@ -41,8 +45,8 @@ class TreeXml(Tree):
 
         for xml_connection in tree.xpath('/tree/connections/connection'):
             xml_src = xml_connection.find('src')
-            src = self.findNode( xml_src.get('id') )
+            src = self.findNode( int(xml_src.get('id')) )
             xml_dst = xml_connection.find('dst')
-            dst = self.findNode( xml_dst.get('id') )
+            dst = self.findNode( int(xml_dst.get('id')) )
             self.connect( src.getConnectorByName(xml_src.get('name')),
             dst.getConnectorByName(xml_dst.get('name')) )

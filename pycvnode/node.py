@@ -3,10 +3,13 @@ import re
 from pycvnode.connector import *
 
 class Node(object):
-    def __init__(self, function_name, connectors = []):
+    def __init__(self, name, connectors = []):
         self.connectors = connectors
-        self.function_name = function_name
+        self.name = name
         self.id = 0 #Id load from file
+
+    def __str__(self):
+        return "%s[%d]" % ( self.name, self.id )
 
     def getConnectorByName( self, name ):
         matches = [ x for x in self.connectors if x.name == name ]
@@ -35,9 +38,6 @@ class Node(object):
             results.append( tmp )
         return results
 
-    def function_call(self, ret, params):
-        function_name = 'cv2.%s' % self.function_name
-        return "%s = %s( %s )" % ( ret, function_name, ','.join( self.eval_parameters(params) ) )
 
 class NodeXml(Node):
     def __init__(self, filename ):
@@ -45,7 +45,7 @@ class NodeXml(Node):
         connector_in = self.loadConnector( tree, "/node/inputs/connector", ConnectorInput )
         connector_out = self.loadConnector( tree, "/node/outputs/connector", ConnectorOutput )
         self.code = tree.xpath("/node/code")[0].text
-        super( NodeXml, self ).__init__( "imread", connectors = connector_in + connector_out )
+        super( NodeXml, self ).__init__( filename, connectors = connector_in + connector_out )
 
     def loadConnector( self, tree, xpath, creator ):
         results = []
