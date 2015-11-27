@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 class Connector(object):
 
@@ -41,7 +42,7 @@ class ConnectorInput(Connector):
 
     def evaluate(self):
         if self.connection != None:
-            return self.connection.output_connector.eval()
+            return self.connection.output_connector.evaluate()
         elif self.value != None:
             return self.value
         else:
@@ -104,7 +105,8 @@ class ConnectorRenderer(object):
         http.send_response(200)
         http.send_header('Content-type','image/png')
         http.end_headers()
-        http.wfile.write(cv2.imencode( '.png', value  ))
+        ret, buf = cv2.imencode( '.png', value )
+        http.wfile.write( np.array(buf).tostring() )
 
     def toStr(self,value):
         http.send_response(200)

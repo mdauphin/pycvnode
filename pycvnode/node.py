@@ -54,9 +54,10 @@ class Node(object):
         #TODO no do in hard codded
         ast = compile( 'import cv2', '<string>', 'exec' )
         exec ast in ns
+        print src
         ast = compile( src, '<string>', 'exec' )
         for i_con in self.getInputConnectors():
-            ns[ i_con.name ] = i_con.value
+            ns[ i_con.name ] = i_con.evaluate()
         exec ast in ns
         return ns[self.getOutputConnectors()[0].name]
 
@@ -65,8 +66,8 @@ class NodeXml(Node):
         tree = etree.parse(filename)
         connector_in = self.loadConnector( tree, "/node/inputs/connector", ConnectorInput )
         connector_out = self.loadConnector( tree, "/node/outputs/connector", ConnectorOutput )
-        self.code = tree.xpath("/node/code")[0].text
         super( NodeXml, self ).__init__( filename, connectors = connector_in + connector_out )
+        self.code = tree.xpath("/node/code")[0].text
 
     def loadConnector( self, tree, xpath, creator ):
         results = []
