@@ -78,3 +78,22 @@ class NodeXml(Node):
             results.append( connector_inst )
             setattr( self, connector_name, connector_inst )
         return results
+
+class NodeHttpRenderer(object):
+    def __init__(self,node):
+        self.node = node
+
+    def connectorRender(self, connector):
+        http_class = 'connector_in'
+        if connector.direction == Connector.Direction.OUTPUT:
+            http_class = 'connector_out'
+        return '<div class="%s">%s</div>\n' % ( http_class, connector.name )
+
+    def connectorsRender(self,node):
+        return "\n".join( [ self.connectorRender(x) for x in node.connectors ] )
+
+    def render(self):
+        return '''<div class="node">
+        <p>%s</p>
+        <div>%s</div>
+        </div>''' % ( self.node.name, self.connectorsRender(self.node) )
