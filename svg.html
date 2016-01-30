@@ -9,6 +9,7 @@
     window.onload = function() {
       //load dynamic scene
       var svg = document.getElementById('svg');
+
       //Create 2 nodes
       var n1 = new Node(svg,'c1');
       n1.move(200,100);
@@ -25,17 +26,20 @@
     //Management mouse drag & drop
     function onMouseDown(evt) {
       var elem = evt.target ;
-      elem.style.fill = 'blue' ;
       selectedItem = elem ;
+      selectedItem.data.selected(true);
 
-      elem.onmouseup = function() {
+      document.onmouseup = function(evt) {
+        console.log( evt.target );
+        selectedItem.data.selected(false);
         selectedItem = null ;
-        elem.style.fill = 'red' ;
       }
+
       document.onmousemove = function(evt) {
+        var div = document.getElementById('coord');
+        div.innerHTML = evt.clientX + ',' + evt.clientY ;
         if ( selectedItem != null ) {
-          selectedItem.setAttribute('cx', evt.clientX);
-          selectedItem.setAttribute('cy', evt.clientY);
+          selectedItem.data.move( evt.clientX, evt.clientY );
           //Data is pointer to Connection class
           if( selectedItem.data.connection != null )
             selectedItem.data.connection.update();
@@ -47,27 +51,55 @@
     function Node(svg, id) {
       this.svg = svg ;
       this.id = id ;
+      this.x = this.y = 0 ;
       this.connection = null ;
       var svgNS = "http://www.w3.org/2000/svg";
+      this.g = document.createElementNS(svgNS,"g");
       this.circle = document.createElementNS(svgNS,"circle");
       this.circle.setAttributeNS(null,'id',id);
-      this.circle.setAttributeNS(null,"cx",100);
-      this.circle.setAttributeNS(null,"cy",100);
+      this.circle.setAttributeNS(null,"cx",40);
+      this.circle.setAttributeNS(null,"cy",40);
       this.circle.setAttributeNS(null,"r",40);
       this.circle.setAttributeNS(null,"fill","red");
       this.circle.setAttributeNS(null,"stroke","black");
-      this.circle.setAttributeNS(null,'onmousedown',"onMouseDown(evt);")
+      this.g.setAttributeNS(null,'onmousedown',"onMouseDown(evt);");
+      //mouse selection is not match with g element !
       this.circle.data = this ;
-      svg.appendChild(this.circle);
+      svg.appendChild(this.g);
+      this.g.appendChild(this.circle);
+      this.addText(this.id);
     }
 
+    Node.prototype.addText = function (txt) {
+      var svgNS = "http://www.w3.org/2000/svg";
+      text = document.createElementNS(svgNS,"text");
+      text.setAttributeNS(null,"x",10);
+      text.setAttributeNS(null,"y",10);
+      text.setAttributeNS(null,"fill","black");
+      text.textContent = txt ;
+      this.g.appendChild(text);
+    };
+
     Node.prototype.move = function( x, y ) {
-      this.circle.setAttribute('cx',x);
-      this.circle.setAttribute('cy',y);
+      //points are in global window
+      var pt = this.svg.createSVGPoint();
+      pt.x = x ; pt.y = y ;
+      var pt_loc = pt.matrixTransform(this.svg.getScreenCTM().inverse())
+      this.x = pt_loc.x - 40 ;
+      this.y = pt_loc.y - 40 ;
+      var translate = '(' + this.x + ',' + this.y  + ')';
+      this.g.setAttribute('transform','translate' + translate )
     }
 
     Node.prototype.getPosition = function () {
-      return { 'x' : +this.circle.getAttribute('cx'), 'y' : +this.circle.getAttribute('cy') }
+      return { 'x' : + this.x + 40, 'y' : + this.y + 40 }
+    };
+
+    Node.prototype.selected = function (value) {
+      var color = 'red' ;
+      if( value )
+        color = 'blue' ;
+      this.circle.setAttributeNS(null,"fill",color);
     };
 
     //Connection class
@@ -77,8 +109,6 @@
       this.p2 = p2 ;
       var svgNS = "http://www.w3.org/2000/svg";
       this.path = document.createElementNS(svgNS,"path");
-      this.path.setAttributeNS(null,'d', 'M100,250 C100,100 400,100 400,250 S400,400 250,250');
-      //myPath.setAttributeNS(null,'d', path_d);
       this.path.setAttributeNS(null,"fill","none");
       this.path.setAttributeNS(null,"stroke","black");
       svg.appendChild(this.path);
@@ -112,5 +142,6 @@
     Sorry, your browser does not support inline SVG.
   </svg>
   <button onclick="appendNode();">add</button>
+  <p id="coord"></p>
 </body>
 </html>
