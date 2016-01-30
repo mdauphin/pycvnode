@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script>
+    var selectedItem  = null ;
+
+    document.onload = function() {
+    }
+
+    function onMouseDown(evt) {
+      var elem = evt.target ;
+      elem.style.fill = 'blue' ;
+      selectedItem = elem ;
+
+      elem.onmouseup = function() {
+        selectedItem = null ;
+        elem.style.fill = 'red' ;
+      }
+      document.onmousemove = function(evt) {
+        if ( selectedItem != null ) {
+          selectedItem.setAttribute('cx', evt.clientX);
+          selectedItem.setAttribute('cy', evt.clientY);
+        }
+      }
+    }
+
+    function addCircle() {
+      var svgNS = "http://www.w3.org/2000/svg";
+      var myCircle = document.createElementNS(svgNS,"circle");
+      myCircle.setAttributeNS(null,"id","mycircle");
+      myCircle.setAttributeNS(null,"cx",100);
+      myCircle.setAttributeNS(null,"cy",100);
+      myCircle.setAttributeNS(null,"r",50);
+      myCircle.setAttributeNS(null,"fill","black");
+      myCircle.setAttributeNS(null,"stroke","none");
+      var svg = document.getElementById('svg');
+      svg.appendChild(myCircle);
+    }
+
+    function getCirclePosition(item) {
+      var c1 = document.getElementById(item);
+      return { 'x' : +c1.getAttribute('cx'), 'y' : +c1.getAttribute('cy') };
+    }
+
+    function drawCurve() {
+      var p1 = getCirclePosition('c1');
+      var p2 = getCirclePosition('c2');
+      var pm = { 'x' : p1.x + ( p2.x - p1.x ) / 2, 'y' : p1.y + ( p2.y - p1.y ) / 2 };
+      var path_d = "M" + p1.x + ',' + p1.y + ' '
+        + 'C' + pm.x + ',' + p1.y + ' '
+        + pm.x + ',' + p2.y + ' '
+        +  p2.x + ',' + p2.y ;
+
+      console.log(path_d);
+
+      var svgNS = "http://www.w3.org/2000/svg";
+      var myPath = document.createElementNS(svgNS,"path");
+      //myPath.setAttributeNS(null,'d', 'M100,250 C100,100 400,100 400,250 S400,400 250,250');
+      myPath.setAttributeNS(null,'d', path_d);
+      myPath.setAttributeNS(null,"fill","none");
+      myPath.setAttributeNS(null,"stroke","black");
+      var svg = document.getElementById('svg');
+      svg.appendChild(myPath);
+    }
+  </script>
+</head>
+<body>
+  <svg id="svg" width="800" height="400" >
+    <circle id="c1" cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" onmousedown="onMouseDown(evt);"/>
+    <circle id="c2" cx="200" cy="50" r="40" stroke="black" stroke-width="3" fill="red" onmousedown="onMouseDown(evt);"/>
+    Sorry, your browser does not support inline SVG.
+  </svg>
+  <button onclick="drawCurve();">add</button>
+</body>
+</html>
