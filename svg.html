@@ -50,32 +50,35 @@
     //Node Class
     function Node(svg, id) {
       this.svg = svg ;
-      this.id = id ;
+      //this.id = id ;
       this.x = this.y = 0 ;
       this.connection = null ;
+
       var svgNS = "http://www.w3.org/2000/svg";
       this.g = document.createElementNS(svgNS,"g");
-      this.circle = document.createElementNS(svgNS,"circle");
-      this.circle.setAttributeNS(null,'id',id);
-      this.circle.setAttributeNS(null,"cx",40);
-      this.circle.setAttributeNS(null,"cy",40);
-      this.circle.setAttributeNS(null,"r",40);
-      this.circle.setAttributeNS(null,"fill","red");
-      this.circle.setAttributeNS(null,"stroke","black");
+      this.circle = this.createElementNS("circle", { 'cx' : 40, 'cy' : 40, 'r' : 40,
+        'fill' : 'red', 'stroke' : 'black',
+        'onmousedown' : 'onMouseDown(evt);' });
+
       this.g.setAttributeNS(null,'onmousedown',"onMouseDown(evt);");
       //mouse selection is not match with g element !
       this.circle.data = this ;
       svg.appendChild(this.g);
       this.g.appendChild(this.circle);
-      this.addText(this.id);
+      this.addText(id);
     }
 
-    Node.prototype.addText = function (txt) {
+    Node.prototype.createElementNS = function (name, attributs) {
       var svgNS = "http://www.w3.org/2000/svg";
-      text = document.createElementNS(svgNS,"text");
-      text.setAttributeNS(null,"x",10);
-      text.setAttributeNS(null,"y",10);
-      text.setAttributeNS(null,"fill","black");
+      var elem = document.createElementNS(svgNS,name);
+      for( var item in attributs ) {
+        elem.setAttributeNS(null, item, attributs[item] );
+      }
+      return elem ;
+    };
+
+    Node.prototype.addText = function (txt) {
+      var text = this.createElementNS("text", { 'x':10, 'y':10, 'fill' : 'black' });
       text.textContent = txt ;
       this.g.appendChild(text);
     };
