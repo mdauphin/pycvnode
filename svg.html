@@ -9,10 +9,11 @@
     window.onload = function() {
       //load dynamic scene
       var svg = document.getElementById('svg');
+      svg.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');
 
       //Create 2 nodes
       var n1 = new Node(svg,'c1');
-      n1.move(200,100);
+      n1.move(200,150);
       var n2 = new Node(svg,'c2');
       n2.move(500,200);
 
@@ -30,7 +31,7 @@
       selectedItem.data.selected(true);
 
       document.onmouseup = function(evt) {
-        console.log( evt.target );
+        //console.log( evt.target );
         selectedItem.data.selected(false);
         selectedItem = null ;
       }
@@ -56,9 +57,10 @@
 
       var svgNS = "http://www.w3.org/2000/svg";
       this.g = document.createElementNS(svgNS,"g");
-      this.circle = this.createElementNS("circle", { 'cx' : 40, 'cy' : 40, 'r' : 40,
-        'fill' : 'red', 'stroke' : 'black',
-        'onmousedown' : 'onMouseDown(evt);' });
+      this.circle = this.createElementNS("rect", { 'rx' : 10, 'ry' : 10,
+        'width' : 180, 'height' : 200,
+        'fill' : '#848484', 'stroke' : 'black',
+         });
 
       this.g.setAttributeNS(null,'onmousedown',"onMouseDown(evt);");
       //mouse selection is not match with g element !
@@ -66,6 +68,7 @@
       svg.appendChild(this.g);
       this.g.appendChild(this.circle);
       this.addText(id);
+      this.addImage();
     }
 
     Node.prototype.createElementNS = function (name, attributs) {
@@ -78,9 +81,19 @@
     };
 
     Node.prototype.addText = function (txt) {
-      var text = this.createElementNS("text", { 'x':10, 'y':10, 'fill' : 'black' });
+      var text = this.createElementNS("text", { 'x':15, 'y':20, 'fill' : 'black' });
       text.textContent = txt ;
       this.g.appendChild(text);
+    };
+
+    Node.prototype.addImage = function () {
+      var img = this.createElementNS("image", { 'x' : 10, 'y' : 40, 'width' : 128, 'height' : 128 });
+      img.setAttributeNS('http://www.w3.org/1999/xlink', "href", "lena.jpg");
+      this.g.appendChild(img);
+    };
+
+    Node.prototype.getSize = function () {
+      return this.g.getBoundingClientRect();
     };
 
     Node.prototype.move = function( x, y ) {
@@ -88,20 +101,20 @@
       var pt = this.svg.createSVGPoint();
       pt.x = x ; pt.y = y ;
       var pt_loc = pt.matrixTransform(this.svg.getScreenCTM().inverse())
-      this.x = pt_loc.x - 40 ;
-      this.y = pt_loc.y - 40 ;
+      this.x = pt_loc.x - this.getSize().width / 2 ;
+      this.y = pt_loc.y - this.getSize().height / 2 ;
       var translate = '(' + this.x + ',' + this.y  + ')';
       this.g.setAttribute('transform','translate' + translate )
     }
 
     Node.prototype.getPosition = function () {
-      return { 'x' : + this.x + 40, 'y' : + this.y + 40 }
+      return { 'x' : + this.x + this.getSize().width / 2, 'y' : + this.y + this.getSize().height / 2 }
     };
 
     Node.prototype.selected = function (value) {
-      var color = 'red' ;
+      var color = '#848484' ;
       if( value )
-        color = 'blue' ;
+        color = '#FF8000' ;
       this.circle.setAttributeNS(null,"fill",color);
     };
 
@@ -146,5 +159,6 @@
   </svg>
   <button onclick="appendNode();">add</button>
   <p id="coord"></p>
+  <img src="lena.jpg" />
 </body>
 </html>
