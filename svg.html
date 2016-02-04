@@ -2,151 +2,22 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <script>
-    //Current selectedItem mouseDown
-    var selectedItem  = null ;
-
-    window.onload = function() {
-      //load dynamic scene
+  <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+  <script src="svg.js"></script>
+  <script type="text/javascript">
+    function ready() {
       var svg = document.getElementById('svg');
-      svg.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');
+      var data = {
+        'nodes' : [
+            { 'id' : 1, 'name' : 'cvread', connectors : {} },
+        ],
+        'connections' : [
 
-      //Create 2 nodes
-      var n1 = new Node(svg,'c1');
-      n1.move(200,150);
-      var n2 = new Node(svg,'c2');
-      n2.move(500,200);
-
-      //Create connection from two previous node
-      var con = new Connection( svg, n1, n2 );
-      con.update();
-      //link node -> connection
-      n1.connection = n2.connection = con ;
+        ]
+      };
+      var workflow = new Workflow(svg,data);
     }
-
-    //Management mouse drag & drop
-    function onMouseDown(evt) {
-      var elem = evt.target ;
-      selectedItem = elem ;
-      selectedItem.data.selected(true);
-
-      document.onmouseup = function(evt) {
-        //console.log( evt.target );
-        selectedItem.data.selected(false);
-        selectedItem = null ;
-      }
-
-      document.onmousemove = function(evt) {
-        var div = document.getElementById('coord');
-        div.innerHTML = evt.clientX + ',' + evt.clientY ;
-        if ( selectedItem != null ) {
-          selectedItem.data.move( evt.clientX, evt.clientY );
-          //Data is pointer to Connection class
-          if( selectedItem.data.connection != null )
-            selectedItem.data.connection.update();
-        }
-      }
-    }
-
-    //Node Class
-    function Node(svg, id) {
-      this.svg = svg ;
-      //this.id = id ;
-      this.x = this.y = 0 ;
-      this.connection = null ;
-
-      var svgNS = "http://www.w3.org/2000/svg";
-      this.g = document.createElementNS(svgNS,"g");
-      this.circle = this.createElementNS("rect", { 'rx' : 10, 'ry' : 10,
-        'width' : 180, 'height' : 200,
-        'fill' : '#848484', 'stroke' : 'black',
-         });
-
-      this.g.setAttributeNS(null,'onmousedown',"onMouseDown(evt);");
-      //mouse selection is not match with g element !
-      this.circle.data = this ;
-      svg.appendChild(this.g);
-      this.g.appendChild(this.circle);
-      this.addText(id);
-      this.addImage();
-    }
-
-    Node.prototype.createElementNS = function (name, attributs) {
-      var svgNS = "http://www.w3.org/2000/svg";
-      var elem = document.createElementNS(svgNS,name);
-      for( var item in attributs ) {
-        elem.setAttributeNS(null, item, attributs[item] );
-      }
-      return elem ;
-    };
-
-    Node.prototype.addText = function (txt) {
-      var text = this.createElementNS("text", { 'x':15, 'y':20, 'fill' : 'black' });
-      text.textContent = txt ;
-      this.g.appendChild(text);
-    };
-
-    Node.prototype.addImage = function () {
-      var img = this.createElementNS("image", { 'x' : 10, 'y' : 40, 'width' : 128, 'height' : 128 });
-      img.setAttributeNS('http://www.w3.org/1999/xlink', "href", "lena.jpg");
-      this.g.appendChild(img);
-    };
-
-    Node.prototype.getSize = function () {
-      return this.g.getBoundingClientRect();
-    };
-
-    Node.prototype.move = function( x, y ) {
-      //points are in global window
-      var pt = this.svg.createSVGPoint();
-      pt.x = x ; pt.y = y ;
-      var pt_loc = pt.matrixTransform(this.svg.getScreenCTM().inverse())
-      this.x = pt_loc.x - this.getSize().width / 2 ;
-      this.y = pt_loc.y - this.getSize().height / 2 ;
-      var translate = '(' + this.x + ',' + this.y  + ')';
-      this.g.setAttribute('transform','translate' + translate )
-    }
-
-    Node.prototype.getPosition = function () {
-      return { 'x' : + this.x + this.getSize().width / 2, 'y' : + this.y + this.getSize().height / 2 }
-    };
-
-    Node.prototype.selected = function (value) {
-      var color = '#848484' ;
-      if( value )
-        color = '#FF8000' ;
-      this.circle.setAttributeNS(null,"fill",color);
-    };
-
-    //Connection class
-
-    function Connection( svg, p1, p2 ) {
-      this.p1 = p1 ;
-      this.p2 = p2 ;
-      var svgNS = "http://www.w3.org/2000/svg";
-      this.path = document.createElementNS(svgNS,"path");
-      this.path.setAttributeNS(null,"fill","none");
-      this.path.setAttributeNS(null,"stroke","black");
-      svg.appendChild(this.path);
-    }
-
-    Connection.prototype.update = function() {
-      var p1 = this.p1.getPosition();
-      var p2 = this.p2.getPosition();
-      var pm = { 'x' : p1.x + ( p2.x - p1.x ) / 2, 'y' : p1.y + ( p2.y - p1.y ) / 2 };
-      var path_d = "M" + p1.x + ',' + p1.y + ' '
-        + 'C' + pm.x + ',' + p1.y + ' '
-        + pm.x + ',' + p2.y + ' '
-        +  p2.x + ',' + p2.y ;
-      //console.log(path_d);
-      this.path.setAttributeNS(null,'d', path_d);
-    }
-
-    function appendNode() {
-      var svg = document.getElementById('svg');
-      return new Node(svg,'c3');
-    }
-
+    $(document).ready(ready);
   </script>
 </head>
 <body>

@@ -1,5 +1,6 @@
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from pycvnode import TreeXml, NodeHttpRenderer
+import os
 
 tree = None
 
@@ -10,9 +11,8 @@ class HttpHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type','text/html')
             self.end_headers()
-            self.wfile.write('<html><head></head><body>')
-            self.wfile.write('<p>hello</p>')
-            self.wfile.write('</body></html>')
+            with open('svg.html') as f:
+                self.wfile.write(f.read())
             return
         elif self.path == '/favicon.ico':
             self.send_response(404)
@@ -21,6 +21,18 @@ class HttpHandler(BaseHTTPRequestHandler):
             self.wfile.write("Not found")
             return
         else:
+            filename, file_extension = os.path.splitext(self.path)
+            self.send_response(200)
+            mime = {
+                '.js' : 'application/javascript',
+                '.jpg': 'image/jpeg'
+            }
+            self.send_header('Content-type',mime[file_extension])
+            self.end_headers()
+            with open(self.path[1:]) as f:
+                self.wfile.write(f.read())
+            return
+            '''
             node_id = int(self.path[1:])
             self.send_response(200)
             self.send_header('Content-type','text/html')
@@ -29,6 +41,7 @@ class HttpHandler(BaseHTTPRequestHandler):
             self.wfile.write(contents)
             #first_out_con = tree.findNode(node_id).getOutputConnectors()[0]
             #first_out_con.render.render(self)
+            '''
             return
 
 def main(filename):

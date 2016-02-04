@@ -1,3 +1,43 @@
+class Workflow {
+
+  nodes : Array<SvgNode> ;
+  connections : Array<Connection> ;
+
+  constructor(svg : SVGSVGElement, data) {
+    this.nodes = [];
+    this.connections = [];
+    this.loadNodes(svg,data);
+    this.loadConnections(svg,data);
+  }
+
+  loadNodes(svg : SVGSVGElement, data) : void {
+    for( var node of data.nodes ) {
+      var n = new SvgNode(svg,node);
+      this.nodes.push(n);
+    }
+  }
+
+  findNodeById(id : number) : SvgNode {
+    for(var i=0;i<this.nodes.length;i++) {
+      if ( this.nodes[i].id == id ) {
+        return this.nodes[i];
+      }
+    }
+    return null;
+  }
+
+  loadConnections(svg : SVGSVGElement, data) : void {
+    for (var connection of data.connections ) {
+      var src = this.findNodeById(data.src);
+      var dst = this.findNodeById(data.dst);
+      if( src != null && dst != null ) {
+        var cnx = new Connection(svg,src,dst);
+        this.connections.push(cnx);
+      }
+    }
+  }
+}
+
 class SvgElement {
 
   svg : SVGSVGElement ;
@@ -29,12 +69,17 @@ class SvgElement {
 class SvgNode extends SvgElement {
 
   name : string ;
+  id : number ;
   g : SVGDefsElement ;
   circle : SVGDefsElement ;
 
   constructor( svg : SVGSVGElement, data ) {
     super(svg);
+    this.id = data.id ;
     this.name = data.name ;
+
+    this.generate();
+
     for( var con of data.connectors ) {
       var tmp = new Connector( svg, con );
       this.connectors.push(tmp);
@@ -42,7 +87,7 @@ class SvgNode extends SvgElement {
   }
 
   //Generate svg code
-  generate(data) {
+  generate() {
     var svgNS = "http://www.w3.org/2000/svg";
     this.g = <SVGDefsElement>document.createElementNS(svgNS,"g");
     this.circle = this.createElementNS("rect", { 'rx' : 10, 'ry' : 10,
@@ -52,11 +97,10 @@ class SvgNode extends SvgElement {
 
     this.g.setAttributeNS(null,'onmousedown',"onMouseDown(evt);");
     //mouse selection is not match with g element !
-    //this.circle.setAttribute('data',this);
     (<any>this.circle).data = this ;
     this.svg.appendChild(this.g);
     this.g.appendChild(this.circle);
-    this.addText(data.name);
+    this.addText(this.name);
   }
 
   addText(txt:string) {
@@ -126,10 +170,29 @@ class ConnectorOut extends Connector {
 }
 
 class Connection extends SvgElement {
-  connector_in : Connector ;
-  connector_out : Connector ;
+  connector_src : Connector ;
+  connector_dst : Connector ;
+  path : SVGPathElement ;
 
-  constructor( svg : SVGSVGElement ) {
+  constructor( svg : SVGSVGElement, src : SvgNode, dst : SvgNode ) {
     super(svg);
+    this.connector_src = src ;
+    this.connector_dst = dst ;
+    this.path = <SVGPathElement>this.createElementNS("path", {
+      'fill' : 'none',
+      'stroke' : 'black',
+    });
+    svg.appendChild(this.path);
+  }
+
+  update = function() {
+    var p1 = this.connector_src.getPosition();
+    var p2 = this.connector_dst.getPosition();
+    var pm = { 'x' : p1.x + ( p2.x - p1.x ) / 2, 'y' : p1.y + ( p2.y - p1.y ) / 2 };
+    var path_d = "M" + p1.x + ',' + p1.y + ' '
+      + 'C' + pm.x + ',' + p1.y + ' '
+      + pm.x + ',' + p2.y + ' '
+      +  p2.x + ',' + p2.y ;
+    this.path.setAttributeNS(null,'d', path_d);
   }
 }
