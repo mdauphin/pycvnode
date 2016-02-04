@@ -65,6 +65,12 @@ class SvgNode extends SvgElement {
     this.g.appendChild(text);
   }
 
+  addImage( url : string ) {
+    var img = this.createElementNS("image", { 'x' : 10, 'y' : 40, 'width' : 128, 'height' : 128 });
+    img.setAttributeNS('http://www.w3.org/1999/xlink', "href", url );
+    this.g.appendChild(img);
+  }
+
   move( x : number, y : number ) {
     var pt = this.svg.createSVGPoint();
     pt.x = x ; pt.y = y ;
@@ -78,6 +84,17 @@ class SvgNode extends SvgElement {
   getSize() {
     return this.g.getBoundingClientRect();
   }
+
+  getPosition() {
+    return { 'x' : + this.x + this.getSize().width / 2, 'y' : + this.y + this.getSize().height / 2 }
+  }
+
+  selected( value : boolean ) {
+    var color = '#848484' ;
+    if( value )
+      color = '#FF8000' ;
+    this.circle.setAttributeNS(null,"fill",color);
+  }
 }
 
 class Connector extends SvgElement {
@@ -87,5 +104,32 @@ class Connector extends SvgElement {
   constructor( svg : SVGSVGElement, data ) {
     super(svg);
     this.name = data.name ;
+  }
+}
+
+class ConnectorIn extends Connector {
+
+  connection : Connection ;
+
+  constructor(svg : SVGSVGElement, data ) {
+    super(svg,data);
+  }
+}
+
+class ConnectorOut extends Connector {
+
+  connections : Array<Connection> ;
+
+  constructor(svg : SVGSVGElement, data ) {
+    super(svg,data);
+  }
+}
+
+class Connection extends SvgElement {
+  connector_in : Connector ;
+  connector_out : Connector ;
+
+  constructor( svg : SVGSVGElement ) {
+    super(svg);
   }
 }
