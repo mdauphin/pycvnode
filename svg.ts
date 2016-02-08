@@ -28,8 +28,8 @@ class Workflow {
 
   loadConnections(svg : SVGSVGElement, data) : void {
     for (var connection of data.connections ) {
-      var src = this.findNodeById(data.src);
-      var dst = this.findNodeById(data.dst);
+      var src = this.findNodeById(data.srcNodeId).findConnector(data.srcConnectorName);
+      var dst = this.findNodeById(data.dstNodeId).findConnector(data.srcConnectorName);
       if( src != null && dst != null ) {
         var cnx = new Connection(svg,src,dst);
         this.connections.push(cnx);
@@ -50,7 +50,7 @@ class SvgElement {
     this.svg = svg ;
   }
 
-  createElementNS(name : string, attributs ) : SVGDefsElement {
+  createElementNS(name : string, attributs = {}) : SVGDefsElement {
     var svgNS = "http://www.w3.org/2000/svg";
     var elem = document.createElementNS(svgNS,name);
     for( var item in attributs ) {
@@ -70,36 +70,52 @@ class SvgNode extends SvgElement {
 
   name : string ;
   id : number ;
-  g : SVGDefsElement ;
-  circle : SVGDefsElement ;
+  g : SVGGElement ;
+  rect : SVGDefsElement ;
+  connectors : Array<Connector> ;
 
   constructor( svg : SVGSVGElement, data ) {
     super(svg);
     this.id = data.id ;
     this.name = data.name ;
+    this.connectors = [];
 
     this.generate();
 
+    var dec = 50 ;
     for( var con of data.connectors ) {
-      var tmp = new Connector( svg, con );
+      var tmp = Connector.create( this, con );
+      var size = tmp.getSize();
+      tmp.move(dec);
       this.connectors.push(tmp);
+      dec += size.height + 5 ;
     }
+
+    this.translate( data.x, data.y );
+  }
+
+  findConnector( connectorName ) : Connector {
+    for( var con of this.connectors ) {
+      if ( con.name == connectorName ) {
+        return con ;
+      }
+    }
+    return null ;
   }
 
   //Generate svg code
   generate() {
-    var svgNS = "http://www.w3.org/2000/svg";
-    this.g = <SVGDefsElement>document.createElementNS(svgNS,"g");
-    this.circle = this.createElementNS("rect", { 'rx' : 10, 'ry' : 10,
+    this.g = <SVGGElement>this.createElementNS('g');
+    this.rect = this.createElementNS("rect", { 'rx' : 10, 'ry' : 10,
       'width' : 180, 'height' : 200,
       'fill' : '#848484', 'stroke' : 'black',
        });
 
     this.g.setAttributeNS(null,'onmousedown',"onMouseDown(evt);");
     //mouse selection is not match with g element !
-    (<any>this.circle).data = this ;
+    (<any>this.rect).data = this ;
     this.svg.appendChild(this.g);
-    this.g.appendChild(this.circle);
+    this.g.appendChild(this.rect);
     this.addText(this.name);
   }
 
@@ -121,8 +137,16 @@ class SvgNode extends SvgElement {
     var pt_loc = pt.matrixTransform(this.svg.getScreenCTM().inverse())
     this.x = pt_loc.x - this.getSize().width / 2 ;
     this.y = pt_loc.y - this.getSize().height / 2 ;
-    var translate = '(' + this.x + ',' + this.y  + ')';
-    this.g.setAttribute('transform','translate' + translate )
+    this.translate(this.x,this.y);
+  }
+
+  public translate( x:number, y:number ) {
+    var translate = '(' + x + ',' + y  + ')';
+    this.g.setAttribute('transform','translate' + translate );
+  }
+
+  public appendChild( child : SVGElement ) {
+    this.g.appendChild(child);
   }
 
   getSize() {
@@ -137,26 +161,85 @@ class SvgNode extends SvgElement {
     var color = '#848484' ;
     if( value )
       color = '#FF8000' ;
-    this.circle.setAttributeNS(null,"fill",color);
+    this.rect.setAttributeNS(null,"fill",color);
   }
 }
 
 class Connector extends SvgElement {
 
   name : string ;
+  parent : SvgNode ;
+  g : SVGGElement ;
+  circle : SVGCircleElement ;
 
-  constructor( svg : SVGSVGElement, data ) {
-    super(svg);
+  constructor( parent : SvgNode, data ) {
+    super(parent.svg);
+    this.parent = parent ;
     this.name = data.name ;
+    this.generate();
   }
+
+  public static create( parent : SvgNode, data ) : Connector {
+    var type = data.dir as string;
+    if ( type == "in" ) {
+      return new ConnectorIn(parent,data);
+    } else if( type == "out" ) {
+      return new ConnectorOut(parent,data);
+    }
+    return null ; // Never append
+  }
+
+  generate() {
+    //this.g = <SVGGElement>this.createElementNS('g');
+    //this.parent.appendChild(this.g);
+    //this.addCircle(6,0);
+    //this.addText(this.name,15,4);
+    console.log('Connector.generate() not be call !');
+  }
+
+  move( y : number ) {
+    var x = 0 ;
+    var translate = '(' + x + ',' + y  + ')';
+    this.g.setAttribute('transform','translate' + translate )
+  }
+
+  addText(txt:string, x:number, y:number) {
+    var text = this.createElementNS("text", { 'x':x, 'y':y, 'fill' : 'black' });
+    text.textContent = txt ;
+    this.g.appendChild(text);
+  }
+
+  addCircle(x:number,y:number) {
+    this.circle = <SVGCircleElement>this.createElementNS("circle", { 'cx' : x, 'cy' : y,
+      'r' : 6,
+      'fill' : 'yellow', 'stroke' : 'black',
+       });
+    this.g.appendChild(this.circle);
+  }
+
+  getSize() {
+    return this.g.getBoundingClientRect();
+  }
+
+  getPosition() {
+    return { 'x' : + this.circle.cx, 'y' : + this.circle.cy }
+  }
+
 }
 
 class ConnectorIn extends Connector {
 
   connection : Connection ;
 
-  constructor(svg : SVGSVGElement, data ) {
-    super(svg,data);
+  constructor(parent : SvgNode, data) {
+    super(parent,data);
+  }
+
+  generate() {
+    this.g = <SVGGElement>this.createElementNS('g');
+    this.parent.appendChild(this.g);
+    this.addCircle(6,0);
+    this.addText(this.name,15,4);
   }
 }
 
@@ -164,8 +247,16 @@ class ConnectorOut extends Connector {
 
   connections : Array<Connection> ;
 
-  constructor(svg : SVGSVGElement, data ) {
-    super(svg,data);
+  constructor(parent : SvgNode, data) {
+    super(parent,data);
+  }
+
+  generate() {
+    this.g = <SVGGElement>this.createElementNS('g');
+    this.parent.appendChild(this.g);
+    //180 is parent width
+    this.addCircle(180,0);
+    this.addText(this.name,15,4);
   }
 }
 
@@ -174,7 +265,7 @@ class Connection extends SvgElement {
   connector_dst : Connector ;
   path : SVGPathElement ;
 
-  constructor( svg : SVGSVGElement, src : SvgNode, dst : SvgNode ) {
+  constructor( svg : SVGSVGElement, src : Connector, dst : Connector ) {
     super(svg);
     this.connector_src = src ;
     this.connector_dst = dst ;

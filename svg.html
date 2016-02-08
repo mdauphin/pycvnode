@@ -9,7 +9,16 @@
       var svg = document.getElementById('svg');
       var data = {
         'nodes' : [
-            { 'id' : 1, 'name' : 'cvread', connectors : {} },
+            { 'id' : 1, 'name' : 'cvread', 'x' : 10, 'y' : 10,
+            connectors : [
+              { 'dir' : 'in' , 'name' : 'conIn' },
+              { 'dir' : 'out', 'name' : 'conOut' },
+            ] },
+            { 'id' : 2, 'name' : 'cvColor', 'x' : 200, 'y' : 10,
+             connectors : [
+              { 'dir' : 'in' , 'name' : 'conIn' },
+              { 'dir' : 'out', 'name' : 'conOut' },
+            ] },
         ],
         'connections' : [
 
