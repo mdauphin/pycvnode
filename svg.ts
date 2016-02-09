@@ -10,7 +10,7 @@ class Workflow {
     this.loadConnections(svg,data);
   }
 
-  loadNodes(svg : SVGSVGElement, data) : void {
+  private loadNodes(svg : SVGSVGElement, data) : void {
     for( var node of data.nodes ) {
       var n = new SvgNode(svg,node);
       this.nodes.push(n);
@@ -26,15 +26,22 @@ class Workflow {
     return null;
   }
 
-  loadConnections(svg : SVGSVGElement, data) : void {
+  private loadConnections(svg : SVGSVGElement, data) : void {
     for (var connection of data.connections ) {
-      var src = this.findNodeById(data.srcNodeId).findConnector(data.srcConnectorName);
-      var dst = this.findNodeById(data.dstNodeId).findConnector(data.srcConnectorName);
+      var src = <ConnectorOut>this.findNodeById(connection.src.id).findConnector(connection.src.name);
+      var dst = <ConnectorIn>this.findNodeById(connection.dst.id).findConnector(connection.dst.name);
       if( src != null && dst != null ) {
         var cnx = new Connection(svg,src,dst);
         this.connections.push(cnx);
+        cnx.update();
       }
     }
+  }
+
+  public removeConnection(cnx : Connection) {
+    var elem = this.connections.filter( function(o) { return (o == cnx); } );
+    if ( elem != null )
+      cnx.remove();    
   }
 }
 
@@ -134,7 +141,8 @@ class SvgNode extends SvgElement {
   move( x : number, y : number ) {
     var pt = this.svg.createSVGPoint();
     pt.x = x ; pt.y = y ;
-    var pt_loc = pt.matrixTransform(this.svg.getScreenCTM().inverse())
+    //transform global point to svg referential
+    var pt_loc = pt.matrixTransform(this.svg.getScreenCTM().inverse());
     this.x = pt_loc.x - this.getSize().width / 2 ;
     this.y = pt_loc.y - this.getSize().height / 2 ;
     this.translate(this.x,this.y);
@@ -153,8 +161,9 @@ class SvgNode extends SvgElement {
     return this.g.getBoundingClientRect();
   }
 
-  getPosition() {
-    return { 'x' : + this.x + this.getSize().width / 2, 'y' : + this.y + this.getSize().height / 2 }
+  getPosition() : SVGPoint {
+    return new SVGPoint();
+    //return { 'x' : + this.x + this.getSize().width / 2, 'y' : + this.y + this.getSize().height / 2 }
   }
 
   selected( value : boolean ) {
@@ -210,19 +219,24 @@ class Connector extends SvgElement {
   }
 
   addCircle(x:number,y:number) {
-    this.circle = <SVGCircleElement>this.createElementNS("circle", { 'cx' : x, 'cy' : y,
+    this.circle = <SVGCircleElement>this.createElementNS("circle",
+    { 'cx' : x, 'cy' : y,
       'r' : 6,
       'fill' : 'yellow', 'stroke' : 'black',
        });
     this.g.appendChild(this.circle);
   }
 
+  /** Get the bouding rect of connector correpoding to g element */
   getSize() {
     return this.g.getBoundingClientRect();
   }
 
-  getPosition() {
-    return { 'x' : + this.circle.cx, 'y' : + this.circle.cy }
+  /** Get the point of Connector relative to svg element */
+  getPosition() : SVGPoint {
+    var ctm = this.circle.getCTM();
+    var pt = this.svg.createSVGPoint() ;
+    return pt.matrixTransform(ctm);
   }
 
 }
@@ -233,6 +247,7 @@ class ConnectorIn extends Connector {
 
   constructor(parent : SvgNode, data) {
     super(parent,data);
+    this.connection = null ;
   }
 
   generate() {
@@ -249,6 +264,7 @@ class ConnectorOut extends Connector {
 
   constructor(parent : SvgNode, data) {
     super(parent,data);
+    this.connections = [];
   }
 
   generate() {
@@ -261,11 +277,11 @@ class ConnectorOut extends Connector {
 }
 
 class Connection extends SvgElement {
-  connector_src : Connector ;
-  connector_dst : Connector ;
+  connector_src : ConnectorOut ;
+  connector_dst : ConnectorIn ;
   path : SVGPathElement ;
 
-  constructor( svg : SVGSVGElement, src : Connector, dst : Connector ) {
+  constructor( svg : SVGSVGElement, src : ConnectorOut, dst : ConnectorIn ) {
     super(svg);
     this.connector_src = src ;
     this.connector_dst = dst ;
@@ -274,11 +290,23 @@ class Connection extends SvgElement {
       'stroke' : 'black',
     });
     svg.appendChild(this.path);
+
+    //Set connectors link
+    this.connector_src.connections.push(this) ;
+    this.connector_dst.connection = this ;
   }
 
-  update = function() {
+  remove() {
+    this.svg.removeChild(this.path);
+    delete this.connector_src.connections[<any>this];
+    this.connector_dst.connection = null ;
+  }
+
+  update() : void {
     var p1 = this.connector_src.getPosition();
     var p2 = this.connector_dst.getPosition();
+    console.log( this.connector_src.name + ' ' + p1.x  + ' ' + p1.y );
+    console.log( this.connector_dst.name + ' ' +  p2.x  + ' ' + p2.y );
     var pm = { 'x' : p1.x + ( p2.x - p1.x ) / 2, 'y' : p1.y + ( p2.y - p1.y ) / 2 };
     var path_d = "M" + p1.x + ',' + p1.y + ' '
       + 'C' + pm.x + ',' + p1.y + ' '

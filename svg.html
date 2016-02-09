@@ -9,22 +9,26 @@
       var svg = document.getElementById('svg');
       var data = {
         'nodes' : [
-            { 'id' : 1, 'name' : 'cvread', 'x' : 10, 'y' : 10,
+            { 'id' : 1, 'name' : 'cvread', 'x' : 20, 'y' : 10,
             connectors : [
               { 'dir' : 'in' , 'name' : 'conIn' },
               { 'dir' : 'out', 'name' : 'conOut' },
             ] },
-            { 'id' : 2, 'name' : 'cvColor', 'x' : 200, 'y' : 10,
+            { 'id' : 2, 'name' : 'cvColor', 'x' : 250, 'y' : 10,
              connectors : [
               { 'dir' : 'in' , 'name' : 'conIn' },
               { 'dir' : 'out', 'name' : 'conOut' },
             ] },
         ],
         'connections' : [
+            { 'src' : { 'id' : 1, 'name' : 'conOut' },
+              'dst' : { 'id' : 2, 'name' : 'conIn'} },
 
         ]
       };
       var workflow = new Workflow(svg,data);
+      var cnx = workflow.connections[0];
+      workflow.removeConnection(cnx);
     }
     $(document).ready(ready);
   </script>
