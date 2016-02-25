@@ -11,13 +11,13 @@
         'nodes' : [
             { 'id' : 1, 'name' : 'cvread', 'x' : 20, 'y' : 10,
             connectors : [
-              { 'dir' : 'in' , 'name' : 'conIn' },
-              { 'dir' : 'out', 'name' : 'conOut' },
+              { 'dir' : Direction.Input , 'name' : 'conIn' },
+              { 'dir' : Direction.Output, 'name' : 'conOut' },
             ] },
             { 'id' : 2, 'name' : 'cvColor', 'x' : 250, 'y' : 10,
              connectors : [
-              { 'dir' : 'in' , 'name' : 'conIn' },
-              { 'dir' : 'out', 'name' : 'conOut' },
+              { 'dir' : Direction.Input , 'name' : 'conIn' },
+              { 'dir' : Direction.Output, 'name' : 'conOut' },
             ] },
         ],
         'connections' : [
@@ -28,17 +28,13 @@
       };
       var workflow = new Workflow(svg,data);
       var cnx = workflow.connections[0];
-      workflow.removeConnection(cnx);
+      //workflow.removeConnection(cnx);
     }
     $(document).ready(ready);
   </script>
 </head>
 <body>
   <svg id="svg" width="800" height="400" >
-    <!--
-    <circle id="c1" cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" onmousedown="onMouseDown(evt);"/>
-    <circle id="c2" cx="200" cy="50" r="40" stroke="black" stroke-width="3" fill="red" onmousedown="onMouseDown(evt);"/>
-  -->
     Sorry, your browser does not support inline SVG.
   </svg>
   <button onclick="appendNode();">add</button>

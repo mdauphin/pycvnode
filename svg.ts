@@ -41,7 +41,7 @@ class Workflow {
   public removeConnection(cnx : Connection) {
     var elem = this.connections.filter( function(o) { return (o == cnx); } );
     if ( elem != null )
-      cnx.remove();    
+      cnx.remove();
   }
 }
 
@@ -73,13 +73,31 @@ class SvgElement {
 
 }
 
-class SvgNode extends SvgElement {
+enum Direction {
+    Input,
+    Output
+}
 
+interface IConnector {
   name : string ;
+  dir : Direction ;
+}
+
+interface INode {
   id : number ;
+  name : string ;
+  connectors : Array<IConnector> ;
+}
+
+class SvgNode extends SvgElement implements INode {
+
+  id : number ;
+  name : string ;
+  connectors : Array<Connector> ;
+
   g : SVGGElement ;
   rect : SVGDefsElement ;
-  connectors : Array<Connector> ;
+
 
   constructor( svg : SVGSVGElement, data ) {
     super(svg);
@@ -101,7 +119,7 @@ class SvgNode extends SvgElement {
     this.translate( data.x, data.y );
   }
 
-  findConnector( connectorName ) : Connector {
+  findConnector( connectorName ) : IConnector {
     for( var con of this.connectors ) {
       if ( con.name == connectorName ) {
         return con ;
@@ -174,14 +192,16 @@ class SvgNode extends SvgElement {
   }
 }
 
-class Connector extends SvgElement {
+class Connector extends SvgElement implements IConnector {
 
   name : string ;
+  dir : Direction ;
+
   parent : SvgNode ;
   g : SVGGElement ;
   circle : SVGCircleElement ;
 
-  constructor( parent : SvgNode, data ) {
+  constructor( parent : SvgNode, dir : Direction, data ) {
     super(parent.svg);
     this.parent = parent ;
     this.name = data.name ;
@@ -189,13 +209,13 @@ class Connector extends SvgElement {
   }
 
   public static create( parent : SvgNode, data ) : Connector {
-    var type = data.dir as string;
-    if ( type == "in" ) {
+    var type = data.dir as Direction;
+    if ( type == Direction.Input ) {
       return new ConnectorIn(parent,data);
-    } else if( type == "out" ) {
+    } else if( type == Direction.Output ) {
       return new ConnectorOut(parent,data);
     }
-    return null ; // Never append
+    throw new Error("Connector type must be Direction.Input or Direction.Output")
   }
 
   generate() {
@@ -246,7 +266,7 @@ class ConnectorIn extends Connector {
   connection : Connection ;
 
   constructor(parent : SvgNode, data) {
-    super(parent,data);
+    super(parent,Direction.Input,data);
     this.connection = null ;
   }
 
@@ -263,7 +283,7 @@ class ConnectorOut extends Connector {
   connections : Array<Connection> ;
 
   constructor(parent : SvgNode, data) {
-    super(parent,data);
+    super(parent,Direction.Output,data);
     this.connections = [];
   }
 
