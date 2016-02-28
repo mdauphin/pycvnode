@@ -7,27 +7,10 @@
   <script type="text/javascript">
     function ready() {
       var svg = document.getElementById('svg');
-      var data = {
-        'nodes' : [
-            { 'id' : 1, 'name' : 'cvread', 'x' : 20, 'y' : 10,
-            connectors : [
-              { 'dir' : Direction.Input , 'name' : 'conIn' },
-              { 'dir' : Direction.Output, 'name' : 'conOut' },
-            ] },
-            { 'id' : 2, 'name' : 'cvColor', 'x' : 250, 'y' : 10,
-             connectors : [
-              { 'dir' : Direction.Input , 'name' : 'conIn' },
-              { 'dir' : Direction.Output, 'name' : 'conOut' },
-            ] },
-        ],
-        'connections' : [
-            { 'src' : { 'id' : 1, 'name' : 'conOut' },
-              'dst' : { 'id' : 2, 'name' : 'conIn'} },
-
-        ]
-      };
-      var workflow = new Workflow(svg,data);
-      var cnx = workflow.connections[0];
+      $.getJSON( '/config', function(data) {
+        var workflow = new Workflow(svg,data);
+        var cnx = workflow.connections[0];
+      });
       //workflow.removeConnection(cnx);
     }
     $(document).ready(ready);

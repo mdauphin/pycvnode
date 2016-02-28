@@ -209,7 +209,8 @@ class Connector extends SvgElement implements IConnector {
   }
 
   public static create( parent : SvgNode, data ) : Connector {
-    var type = data.dir as Direction;
+    var strtype : string = data.dir;
+    var type : Direction = Direction[strtype];
     if ( type == Direction.Input ) {
       return new ConnectorIn(parent,data);
     } else if( type == Direction.Output ) {

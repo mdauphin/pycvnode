@@ -1,6 +1,8 @@
 from pycvnode.connection import Connection
-from pycvnode.node import NodeXml
+from pycvnode.node import NodeXml, NodeJson
+from pycvnode.connection import ConnectionJson
 from lxml import etree
+import json
 
 class Tree(object):
     def __init__(self, nodes = [], connections = []):
@@ -50,3 +52,13 @@ class TreeXml(Tree):
             dst = self.findNode( int(xml_dst.get('id')) )
             self.connect( src.getConnectorByName(xml_src.get('name')),
             dst.getConnectorByName(xml_dst.get('name')) )
+
+class TreeJson(object):
+    """docstring for TreeJson"""
+    def __init__(self, tree):
+        super(TreeJson, self).__init__()
+        self.tree = tree
+    def render(self):
+        nodes = [ NodeJson(node).render() for node in self.tree.nodes ]
+        connections = [ ConnectionJson(con).render() for con in self.tree.connections ]
+        return json.dumps( { 'nodes': nodes, 'connections': connections } )

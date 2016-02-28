@@ -1,5 +1,5 @@
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
-from pycvnode import TreeXml, NodeHttpRenderer
+from pycvnode import TreeXml, NodeHttpRenderer, TreeJson
 import os
 
 tree = None
@@ -20,6 +20,12 @@ class HttpHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write("Not found")
             return
+        elif self.path == '/config':
+            self.send_response(200)
+            self.send_header('Content-type','text/json')
+            self.end_headers()
+            self.wfile.write(TreeJson(tree).render());
+            return ;
         else:
             filename, file_extension = os.path.splitext(self.path)
             self.send_response(200)

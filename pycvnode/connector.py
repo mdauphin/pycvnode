@@ -67,7 +67,6 @@ class ConnectorOutput(Connector):
     def evaluate(self):
         return self.node.evaluate()
 
-
 class ConnectorParser(object):
     def __init__(self,connector):
         self.connector = connector
@@ -114,3 +113,13 @@ class ConnectorRenderer(object):
         http.end_headers()
         http.wfile.write('<p>%s</p>' % value)
         return
+
+class ConnectorJson(object):
+    def __init__(self,connector):
+        self.connector = connector;
+    def render(self):
+        #{ 'dir' : Direction.Input , 'name' : 'conIn' },
+        dir = 'Input'
+        if ( self.connector is ConnectorOutput ):
+            dir = 'Output'
+        return { 'dir': dir, 'name' : self.connector.name }

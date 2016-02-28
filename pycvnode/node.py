@@ -97,3 +97,17 @@ class NodeHttpRenderer(object):
         <p>%s</p>
         <div>%s</div>
         </div>''' % ( self.node.name, self.connectorsRender(self.node) )
+
+class NodeJson(object):
+    """docstring for NodeJson"""
+    def __init__(self, node):
+        super(NodeJson, self).__init__()
+        self.node = node
+
+    def render(self):
+        connectors = [ ConnectorJson(c).render() for c in self.node.connectors ]
+        return { 'id': self.node.id,
+            'name': self.node.name,
+             'x': 0,
+             'y': 0,
+             'connectors': connectors };
