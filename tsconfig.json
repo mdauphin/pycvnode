@@ -22,7 +22,12 @@
     "compileOnSave": true,
     "buildOnSave": false,
     "files": [
-        "svg.ts"
+        "js/connection.ts",
+        "js/connector.ts",
+        "js/jsnode.ts",
+        "js/node.ts",
+        "js/svgelement.ts",
+        "static/svg.ts"
     ],
     "atom": {
         "rewriteTsconfig": true

@@ -2,7 +2,6 @@ from pycvnode.connection import Connection
 from pycvnode.node import NodeXml, NodeJson
 from pycvnode.connection import ConnectionJson
 from lxml import etree
-import json
 
 class Tree(object):
     def __init__(self, nodes = [], connections = []):
@@ -61,4 +60,4 @@ class TreeJson(object):
     def render(self):
         nodes = [ NodeJson(node).render() for node in self.tree.nodes ]
         connections = [ ConnectionJson(con).render() for con in self.tree.connections ]
-        return json.dumps( { 'nodes': nodes, 'connections': connections } )
+        return { 'nodes': nodes, 'connections': connections }
