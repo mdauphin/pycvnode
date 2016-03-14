@@ -97,22 +97,15 @@ class ConnectorRenderer(object):
             'tuple' : self.toStr,
             'numpy.ndarray' : self.toImg,
              }
-    def render(self, http):
-        return self.converter[self.connector.type](http,self.connector.evaluate())
+    def render(self):
+        return self.converter[self.connector.type](self.connector.evaluate())
 
-    def toImg(self, http, value ):
-        http.send_response(200)
-        http.send_header('Content-type','image/png')
-        http.end_headers()
+    def toImg(self, value ):
         ret, buf = cv2.imencode( '.png', value )
-        http.wfile.write( np.array(buf).tostring() )
+        return buf.tobytes()
 
     def toStr(self,value):
-        http.send_response(200)
-        http.send_header('Content-type','text/html')
-        http.end_headers()
-        http.wfile.write('<p>%s</p>' % value)
-        return
+        return '<p>%s</p>' % value
 
 class ConnectorJson(object):
     def __init__(self,connector):

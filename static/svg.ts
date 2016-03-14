@@ -142,6 +142,7 @@ class SvgNode extends SvgElement implements INode {
     this.svg.appendChild(this.g);
     this.g.appendChild(this.rect);
     this.addText(this.name);
+    this.addImage('/image/' + this.id )
   }
 
   addText(txt:string) {

@@ -10,8 +10,10 @@
       $.getJSON( '/config', function(data) {
         var workflow = new Workflow(svg,data);
         var cnx = workflow.connections[0];
+        workflow.findNodeById('2').translate(200,0);
+        workflow.findNodeById('3').translate(400,0);
+        //workflow.removeConnection(cnx);
       });
-      //workflow.removeConnection(cnx);
     }
     $(document).ready(ready);
   </script>
