@@ -1,1 +1,5 @@
 Visual Node editor for python and opencv
+
+Use Python and Flask as web server
+Use Typescript to rendering node in svg
+
